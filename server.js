@@ -95,4 +95,4 @@ cron.schedule('0 0 * * *', async () => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Alto Tips API Server running on port ${PORT}`);
-});
+}); 

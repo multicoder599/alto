@@ -21,7 +21,8 @@ const tipsSchema = new mongoose.Schema({
     identifier: { type: String, default: 'main' },
     yesterday: { type: Array, default: [] },
     today: { type: Array, default: [] },
-    tomorrow: { type: Array, default: [] }
+    tomorrow: { type: Array, default: [] },
+    payments: { type: Object, default: { UG: [], TZ: [] } } // <-- ADDED PAYMENTS OBJECT
 });
 
 const Tips = mongoose.model('Tips', tipsSchema);
@@ -35,7 +36,13 @@ app.get('/api/tips', async (req, res) => {
         
         // If the database is completely empty (first time running), create the default structure
         if (!db) {
-            db = await Tips.create({ identifier: 'main', yesterday: [], today: [], tomorrow: [] });
+            db = await Tips.create({ 
+                identifier: 'main', 
+                yesterday: [], 
+                today: [], 
+                tomorrow: [],
+                payments: { UG: [], TZ: [] } 
+            });
         }
         
         res.json(db);
@@ -47,12 +54,13 @@ app.get('/api/tips', async (req, res) => {
 // POST: Save new data from the Admin Panel
 app.post('/api/tips', async (req, res) => {
     try {
-        const { yesterday, today, tomorrow } = req.body;
+        // Extract payments alongside the games from the incoming request
+        const { yesterday, today, tomorrow, payments } = req.body;
         
         // Find the main document and update it, or create it if it doesn't exist (upsert)
         await Tips.findOneAndUpdate(
             { identifier: 'main' },
-            { yesterday, today, tomorrow },
+            { yesterday, today, tomorrow, payments }, // <-- SAVE PAYMENTS TO DATABASE
             { upsert: true, new: true }
         );
         
@@ -95,4 +103,4 @@ cron.schedule('0 0 * * *', async () => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Alto Tips API Server running on port ${PORT}`);
-}); 
+});
